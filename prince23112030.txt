@@ -1,0 +1,140 @@
+SET B
+
+1)select ts.*,d.* from trainschedules as ts join drivers as d on ts.driverid = d.driverid where ts.date = "2023-10-10";
+
++------------+---------+---------------+-------------+----------+------------+------------+---------+-------------------+----------+------------+---------------+-----------------+---------+
+| ScheduleID | RouteID | DepartureTime | ArrivalTime | DriverID | CoDriverID | Date       | TrainId | ActualArrivalTime | DriverID | DriverName | ContactNumber | CityOfResidence | RestDay |
++------------+---------+---------------+-------------+----------+------------+------------+---------+-------------------+----------+------------+---------------+-----------------+---------+
+|          6 |       6 | 18:00:00      | 22:00:00    |        6 |          5 | 2023-10-10 |       6 | 22:05:00          |        6 | Neha Gupta | 7654321098    | Hyderabad       | Friday  |
++------------+---------+---------------+-------------+----------+------------+------------+---------+-------------------+----------+------------+---------------+-----------------+---------+
+
+
+
+2)
+
+SELECT
+    c.CoachNumber,
+    c.Mileage,
+    c.LastMaintenanceDate,
+    COUNT(ts.ScheduleID) AS TotalScheduledTrips
+FROM
+    coaches c
+JOIN
+    trainschedules ts ON c.Train_id = ts.TrainId
+WHERE
+    c.Mileage BETWEEN 4000 AND 4999
+    AND MONTH(ts.Date) = 9 AND YEAR(ts.Date) = YEAR(CURRENT_DATE())
+GROUP BY
+    c.CoachNumber, c.Mileage, c.LastMaintenanceDate;
+    
+    
+    +-------------+---------+---------------------+---------------------+
+| CoachNumber | Mileage | LastMaintenanceDate | TotalScheduledTrips |
++-------------+---------+---------------------+---------------------+
+| C304        |    4000 | 2023-09-01          |                   4 |
+| C303        |    4000 | 2023-09-01          |                   4 |
+| C302        |    4000 | 2023-09-01          |                   4 |
+| C301        |    4000 | 2023-09-01          |                   4 |
++-------------+---------+---------------------+---------------------+
+
+
+
+
+
+
+
+3)
+ SELECT
+    ta.AgentID,
+    ta.Name AS AgentName,
+    r.RouteID,
+    r.Originid,
+    r.Destinationid,
+    COUNT(b.BookingID) AS Totalbookings,
+    COUNT(CASE WHEN b.Iscancelled IS NULL THEN 1 END) AS Confirmedbookings,
+    (COUNT(CASE WHEN b.iscancelled IS NULL THEN 1 END) / COUNT(b.BookingID)) * 100 AS PercentageConfirmedbookings
+FROM
+    travelagents ta
+JOIN
+    bookings b ON ta.AgentID = b.TravelAgentID
+JOIN
+    trainschedules ts ON b.ScheduleID = ts.ScheduleID
+JOIN
+    routes r ON ts.RouteID = r.RouteID
+WHERE
+    MONTH(b.BookingDate) = 01 AND YEAR(b.BookingDate) = YEAR(CURRENT_DATE())
+GROUP BY
+    ta.AgentID, ta.Name, r.RouteID, r.Originid, r.Destinationid
+ORDER BY
+    PercentageConfirmedbookings DESC;
+    
+    
+    +---------+------------------------+---------+----------+---------------+---------------+-------------------+-----------------------------+
+| AgentID | AgentName              | RouteID | Originid | Destinationid | Totalbookings | Confirmedbookings | PercentageConfirmedbookings |
++---------+------------------------+---------+----------+---------------+---------------+-------------------+-----------------------------+
+|       4 | Golden Triangle Tours  |       5 |        9 |            10 |             1 |                 1 |                    100.0000 |
+|       6 | Elegant Voyages        |       6 |        4 |             3 |             1 |                 1 |                    100.0000 |
+|       8 | Incredible Expeditions |       8 |        7 |             1 |             1 |                 1 |                    100.0000 |
+|       9 | Spiritual Sojourns     |       9 |        8 |             3 |             1 |                 1 |                    100.0000 |
+|      10 | Eastern Odyssey        |      10 |        6 |             8 |             1 |                 1 |                    100.0000 |
+|       7 | Majestic Holidays      |       7 |        1 |             7 |             1 |                 0 |                      0.0000 |
++---------+------------------------+---------+----------+---------------+---------------+-------------------+-----------------------------
+
+
+
+
+
+
+4)
+SELECT
+    r.RouteID,
+    r.Originid,
+    r.Destinationid,
+    COUNT(b.BookingID) AS Totalbookings,
+    COUNT(CASE WHEN b.TravelAgentID IS NULL THEN 1 END) AS bookingsNotByAgents,
+    (COUNT(CASE WHEN b.TravelAgentID IS NULL THEN 1 END) / COUNT(b.BookingID)) * 100 AS PercentagebookingsNotByAgents
+FROM
+    routes r
+JOIN
+    trainschedules ts ON r.RouteID = ts.RouteID
+JOIN
+    bookings b ON ts.ScheduleID = b.ScheduleID
+GROUP BY
+    r.RouteID, r.Originid, r.Destinationid
+HAVING
+    bookingsNotByAgents > COUNT(b.BookingID) / 2;
+    
+    +---------+----------+---------------+---------------+---------------------+-------------------------------+
+| RouteID | Originid | Destinationid | Totalbookings | bookingsNotByAgents | PercentagebookingsNotByAgents |
++---------+----------+---------------+---------------+---------------------+-------------------------------+
+|       4 |        7 |             8 |             1 |                   1 |                      100.0000 |
++---------+----------+---------------+---------------+---------------------+-------------------------------+
+
+
+
+
+
+
+5)
+SELECT
+    ta.AgentID,
+    ta.Name AS AgentName,
+    ta.CommissionPercentage,
+   ((sum(b.ticketprice) *0.1)) AS TotalCommission
+FROM
+    travelagents ta
+JOIN
+    bookings b ON ta.AgentID = b.TravelAgentID
+WHERE
+    MONTH(b.BookingDate) = 09 AND YEAR(b.BookingDate) = YEAR(CURRENT_DATE())
+GROUP BY
+    ta.AgentID, ta.Name, ta.CommissionPercentage
+ORDER BY
+    TotalCommission DESC;
+
++---------+--------------------+----------------------+-----------------+
+| AgentID | AgentName          | CommissionPercentage | TotalCommission |
++---------+--------------------+----------------------+-----------------+
+|       1 | Travel India Tours |                10.00 |          57.500 |
++---------+--------------------+----------------------+-----------------+
+

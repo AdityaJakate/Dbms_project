@@ -1,0 +1,161 @@
+set A ) 
+
+3 )
+
+SELECT
+    ta.AgentID,
+    ta.Name AS AgentName,
+    ta.CommissionPercentage,
+    COUNT(b.BookingID) AS Confirmedbookings
+FROM
+    TravelAgents ta
+JOIN
+    bookings b ON ta.AgentID = b.TravelAgentID
+WHERE
+    MONTH(b.BookingDate) = 09 AND YEAR(b.BookingDate) = YEAR(CURRENT_DATE())
+GROUP BY
+    ta.AgentID, ta.Name, ta.CommissionPercentage
+HAVING
+    COUNT(b.BookingID) >= 10;
+
+
++---------+--------------------+----------------------+-------------------+
+| AgentID | AgentName          | CommissionPercentage | Confirmedbookings |
++---------+--------------------+----------------------+-------------------+
+|       1 | Travel India Tours |                10.00 |                10 |
++---------+--------------------+----------------------+-------------------+
+
+
+
+
+2)
+
+
+
+SELECT
+    r.RouteID,
+    r.OriginID,
+    r.DestinationId,
+    t.TicketId,
+    t.TotalTickets,
+    t.SoldTickets,
+    t.AvailbleTickets,
+    COUNT(CASE WHEN b.DiscountType = 'child' THEN 1 END) AS Children,
+    COUNT(CASE WHEN b.DiscountType = 'None' THEN 1 END) AS Adult,
+    COUNT(CASE WHEN b.DiscountType = 'Senior Citizen' THEN 1 END) AS SeniorCitizen
+FROM
+    routes r
+JOIN
+    trainschedules ts ON r.RouteID = ts.RouteID
+JOIN
+    ticket t ON r.RouteID = t.RouteId AND ts.ScheduleID = t.ScheduleID
+LEFT JOIN
+    bookings b ON r.RouteID = b.RouteID AND ts.ScheduleID = b.ScheduleID
+WHERE
+    MONTH(b.BookingDate) = 10 AND YEAR(b.BookingDate) = YEAR(CURRENT_DATE())
+GROUP BY
+    r.RouteID, r.OriginId, r.DestinationId, t.TicketId, t.TotalTickets, t.SoldTickets, t.AvailbleTickets
+ORDER BY
+
+    t.SoldTickets DESC;
+
+
++---------+----------+---------------+----------+--------------+-------------+-----------------+----------+-------+---------------+
+| RouteID | OriginID | DestinationId | TicketId | TotalTickets | SoldTickets | AvailbleTickets | Children | Adult | SeniorCitizen |
++---------+----------+---------------+----------+--------------+-------------+-----------------+----------+-------+---------------+
+|       5 |        9 |            10 |        5 |          110 |           1 |             109 |        0 |     1 |             0 |
++---------+----------+---------------+----------+--------------+-------------+-----------------+----------+-------+---------------+
+
+
+
+4)
+SELECT
+    r.RouteID,
+    r.OriginId,
+    r.DestinationId,
+    
+   COUNT(b.DiscountType) AS SeniorCitizenbookings
+FROM
+    routes r
+JOIN
+    trainschedules ts ON r.RouteID = ts.RouteID
+LEFT JOIN
+    bookings b ON r.RouteID = b.RouteID AND ts.ScheduleID = b.ScheduleID
+WHERE
+   lower( b.DiscountType) = 'senior citizen'
+GROUP BY
+    r.RouteID, r.OriginId, r.DestinationId
+ORDER BY
+    SeniorCitizenbookings DESC
+    limit 1;
+    
+    
+    
+    +---------+----------+---------------+-----------------------+
+| RouteID | OriginId | DestinationId | SeniorCitizenbookings |
++---------+----------+---------------+-----------------------+
+|       5 |        9 |            10 |                     2 |
++---------+----------+---------------+-----------------------+
+
+
+
+
+
+
+5)
+    
+    select a.routeid,a.originid,a.destinationid,a.totalschedules,a.ontimeschedules from (    
+     SELECT
+    r.RouteID,
+    r.OriginID,
+    r.DestinationId,
+    COUNT(ts.ScheduleID) AS TotalSchedules,
+    SUM(CASE WHEN ts.ActualArrivalTime = ts.ArrivalTime THEN 1 ELSE 0 END) AS OnTimeSchedules
+FROM
+    routes r
+JOIN
+    trainschedules ts ON r.RouteID = ts.RouteID
+GROUP BY
+    r.RouteID) a where totalschedules= ontimeschedules;
+    
+    +---------+----------+---------------+----------------+-----------------+
+| routeid | originid | destinationid | totalschedules | ontimeschedules |
++---------+----------+---------------+----------------+-----------------+
+|       4 |        7 |             8 |              1 |               1 |
+|       5 |        9 |            10 |              1 |               1 |
+|      11 |       20 |            21 |              1 |               1 |
+|      12 |       21 |            20 |              1 |               1 |
+|      13 |        2 |             1 |              1 |               1 |
++---------+----------+---------------+----------------+-----------------+
+
+
+
+
+
+1)
+select t.* from(select train_id from (
+select A.total as total1,A.train_id,B.total from 
+(select count(coachnumber) as total ,train_id from coaches where train_id in 
+(select trainid from trainschedules where routeid in
+    (select routeid from routes where (originid = 
+		(select stationid from stations where lower(stationname) like "goa%") and 
+        DestinationId = (select stationid from stations where lower(stationname) like 'mumbai%')) or (originid = 
+		(select stationid from stations where lower(stationname) like "ajmer%") and 
+        DestinationId = (select stationid from stations where lower(stationname) like 'lonavla%')) ))
+        and NextMaintenanceDate<='2023-11-30'
+        group by Train_id )A join    
+(select  count(coachnumber) as total,train_id from coaches where train_id in 
+(select trainid from trainschedules where routeid in
+    (select routeid from routes where originid = 
+		(select stationid from stations where lower(stationname) like 'goa%') and 
+        DestinationId = (select stationid from stations where lower(stationname) like 'mumbai%'))) 
+        group by Train_id )B on A.train_id = B.train_id)C where total/2 <total1) a join train t on a.train_id = t.train_id;
+        
+        +----------+------------------+
+| Train_id | TrainName        |
++----------+------------------+
+|        1 | Rajdhani Express |
+|        2 | Shatabdi Express |
+|        3 | Duronto Express  |
++----------+------------------+
+
