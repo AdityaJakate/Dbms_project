@@ -1,0 +1,270 @@
+
+CREATE TABLE `train` (
+   `Train_id` int NOT NULL,
+   `TrainName` varchar(40) DEFAULT NULL,
+   PRIMARY KEY (`Train_id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+CREATE TABLE `stations` (
+   `StationId` int NOT NULL,
+   `StationName` varchar(50) DEFAULT NULL,
+   PRIMARY KEY (`StationId`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+CREATE TABLE `drivers` (
+   `DriverID` int NOT NULL,
+   `DriverName` varchar(100) DEFAULT NULL,
+   `ContactNumber` varchar(20) DEFAULT NULL,
+   `CityOfResidence` varchar(100) DEFAULT NULL,
+   `RestDay` varchar(20) DEFAULT NULL,
+   PRIMARY KEY (`DriverID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+CREATE TABLE `coaches` (
+   `CoachNumber` varchar(10) NOT NULL,
+   `Mileage` int DEFAULT NULL,
+   `LastMaintenanceDate` date DEFAULT NULL,
+   `NextMaintenanceDate` date DEFAULT NULL,
+   `Train_id` int DEFAULT NULL,
+   PRIMARY KEY (`CoachNumber`),
+   KEY `tid` (`Train_id`),
+   CONSTRAINT `tid` FOREIGN KEY (`Train_id`) REFERENCES `train` (`Train_id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+
+CREATE TABLE `seats` (
+   `SeatNumber` int NOT NULL,
+   `CoachNumber` varchar(50) NOT NULL,
+   PRIMARY KEY (`SeatNumber`,`CoachNumber`),
+   KEY `CoachNumber` (`CoachNumber`),
+   CONSTRAINT `seats_ibfk_1` FOREIGN KEY (`CoachNumber`) REFERENCES `coaches` (`CoachNumber`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+CREATE TABLE `passengers` (
+   `PassengerID` int NOT NULL,
+   `Name` varchar(100) DEFAULT NULL,
+   `Age` int DEFAULT NULL,
+   `ContactInformation` varchar(100) DEFAULT NULL,
+   PRIMARY KEY (`PassengerID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+CREATE TABLE `travelagents` (
+   `AgentID` int NOT NULL,
+   `Name` varchar(100) DEFAULT NULL,
+   `CommissionPercentage` decimal(5,2) DEFAULT NULL,
+   PRIMARY KEY (`AgentID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE `routes` (
+   `RouteID` int NOT NULL,
+   `OriginId` int DEFAULT NULL,
+   `DestinationId` int DEFAULT NULL,
+   `Distance` int DEFAULT NULL,
+   `TravelTime` varchar(20) DEFAULT NULL,
+   PRIMARY KEY (`RouteID`),
+   KEY `OriginId` (`OriginId`),
+   KEY `DestinationId` (`DestinationId`),
+   CONSTRAINT `routes_ibfk_1` FOREIGN KEY (`OriginId`) REFERENCES `stations` (`StationId`),
+   CONSTRAINT `routes_ibfk_2` FOREIGN KEY (`DestinationId`) REFERENCES `stations` (`StationId`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE `intermediatestations` (
+   `RouteId` int NOT NULL,
+   `StationId` int NOT NULL,
+   `ArrivalTime` time DEFAULT NULL,
+   `DepartartureTime` time DEFAULT NULL,
+   `Date` date DEFAULT NULL,
+   PRIMARY KEY (`RouteId`,`StationId`),
+   KEY `StationId` (`StationId`),
+   CONSTRAINT `IntermediateStations_ibfk_1` FOREIGN KEY (`RouteId`) REFERENCES `routes` (`RouteID`),
+   CONSTRAINT `IntermediateStations_ibfk_2` FOREIGN KEY (`StationId`) REFERENCES `stations` (`StationId`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+CREATE TABLE `trainschedules` (
+   `ScheduleID` int NOT NULL,
+   `RouteID` int DEFAULT NULL,
+   `DepartureTime` time DEFAULT NULL,
+   `ArrivalTime` time DEFAULT NULL,
+   `DriverID` int DEFAULT NULL,
+   `CoDriverID` int DEFAULT NULL,
+   `Date` date DEFAULT NULL,
+   `TrainId` int DEFAULT NULL,
+   `ActualArrivalTime` time DEFAULT NULL,
+   PRIMARY KEY (`ScheduleID`),
+   KEY `RouteID` (`RouteID`),
+   KEY `DriverID` (`DriverID`),
+   KEY `CoDriverID` (`CoDriverID`),
+   CONSTRAINT `TrainSchedules_ibfk_1` FOREIGN KEY (`RouteID`) REFERENCES `routes` (`RouteID`),
+   CONSTRAINT `TrainSchedules_ibfk_2` FOREIGN KEY (`DriverID`) REFERENCES `drivers` (`DriverID`),
+   CONSTRAINT `TrainSchedules_ibfk_3` FOREIGN KEY (`CoDriverID`) REFERENCES `drivers` (`DriverID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE `bookings` (
+   `BookingID` int NOT NULL,
+   `PassengerID` int DEFAULT NULL,
+   `RouteID` int DEFAULT NULL,
+   `ScheduleID` int DEFAULT NULL,
+   `BookingDate` date DEFAULT NULL,
+   `TicketPrice` decimal(10,2) DEFAULT NULL,
+   `DiscountType` varchar(20) DEFAULT NULL,
+   `TravelAgentID` int DEFAULT NULL,
+   `seatnumber` int DEFAULT NULL,
+   `coachnumber` varchar(50) DEFAULT NULL,
+   `IsCancelled` int DEFAULT NULL,
+   PRIMARY KEY (`BookingID`),
+   KEY `PassengerID` (`PassengerID`),
+   KEY `RouteID` (`RouteID`),
+   KEY `ScheduleID` (`ScheduleID`),
+   KEY `TravelAgentID` (`TravelAgentID`),
+   KEY `bbc` (`seatnumber`,`coachnumber`),
+   CONSTRAINT `bbc` FOREIGN KEY (`seatnumber`, `coachnumber`) REFERENCES `seats` (`SeatNumber`, `CoachNumber`),
+   CONSTRAINT `Bookings_ibfk_1` FOREIGN KEY (`PassengerID`) REFERENCES `passengers` (`PassengerID`),
+   CONSTRAINT `Bookings_ibfk_2` FOREIGN KEY (`RouteID`) REFERENCES `routes` (`RouteID`),
+   CONSTRAINT `Bookings_ibfk_3` FOREIGN KEY (`ScheduleID`) REFERENCES `trainschedules` (`ScheduleID`),
+   CONSTRAINT `Bookings_ibfk_4` FOREIGN KEY (`TravelAgentID`) REFERENCES `travelagents` (`AgentID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+CREATE TABLE `ticket` (
+   `TicketId` int NOT NULL,
+   `RouteId` int DEFAULT NULL,
+   `ScheduleID` int DEFAULT NULL,
+   `Price` float DEFAULT NULL,
+   `TotalTickets` smallint DEFAULT NULL,
+   `SoldTickets` smallint DEFAULT NULL,
+   `AvailbleTickets` smallint DEFAULT NULL,
+   PRIMARY KEY (`TicketId`),
+   KEY `RouteId` (`RouteId`),
+   KEY `ScheduleID` (`ScheduleID`),
+   CONSTRAINT `Ticket_ibfk_1` FOREIGN KEY (`RouteId`) REFERENCES `routes` (`RouteID`),
+   CONSTRAINT `Ticket_ibfk_2` FOREIGN KEY (`ScheduleID`) REFERENCES `trainschedules` (`ScheduleID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE `routeactivedays` (
+   `RouteId` int NOT NULL,
+   `ActiveDay` varchar(50) NOT NULL,
+   PRIMARY KEY (`RouteId`,`ActiveDay`),
+   CONSTRAINT `RouteActiveDays_ibfk_1` FOREIGN KEY (`RouteId`) REFERENCES `routes` (`RouteID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+
+CREATE TABLE `backup_trains` (
+   `Train_id` int DEFAULT NULL,
+   `RouteId` int DEFAULT NULL,
+   KEY `Train_id` (`Train_id`),
+   KEY `RouteId` (`RouteId`),
+   CONSTRAINT `Backup_Trains_ibfk_1` FOREIGN KEY (`Train_id`) REFERENCES `train` (`Train_id`),
+   CONSTRAINT `Backup_Trains_ibfk_2` FOREIGN KEY (`RouteId`) REFERENCES `routes` (`RouteID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+
+
+
+
+
+
+CREATE TABLE `accomidation` (
+   `StationId` int NOT NULL,
+   `DriverId` int NOT NULL,
+   `Date` date NOT NULL,
+   `RoomNumber` smallint DEFAULT NULL,
+   PRIMARY KEY (`StationId`,`DriverId`,`Date`),
+   KEY `DriverId` (`DriverId`),
+   CONSTRAINT `Accomidation_ibfk_1` FOREIGN KEY (`StationId`) REFERENCES `stations` (`StationId`),
+   CONSTRAINT `Accomidation_ibfk_2` FOREIGN KEY (`DriverId`) REFERENCES `drivers` (`DriverID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
