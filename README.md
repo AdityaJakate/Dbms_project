@@ -4,7 +4,10 @@ This Database is created by joint efforts of
   #23112030 Prince kewatkar
   #23112046 Rohit Sah
 
-  Individual submissions files are adi
+  Individual submissions files  for queries are as follow
+   Set A by  Rohit Sah filename-rohit23112046.txt
+   Set B  by Prince kewatkar filename-prince23112030.txt
+   set C by Aditya Jakate filename-aditya23112014.txt
 
 The database project is developed for the InterCity Express Trains to support their day to day operations. The InterCity Express Trains (IET) represent an India based company that started operating 6 months ago. They are operating trains that are indigenously developed high-speed, automated train units. An InterCity Express  train  is equipped with latest facilities and will provide a faster, more comfortable, and more convenient travel experience to rail users. 
 
